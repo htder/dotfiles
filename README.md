@@ -1,5 +1,4 @@
 ## Dotfiles
 
-These dotfiles will hopefully make switching linux distros painless.
-
+Bash script and ansible playbook to setup a simple fedora development environment.
 
