@@ -1,0 +1,68 @@
+#!/bin/bash
+set -e
+
+DOTFILES_DIR="$HOME/.dotfiles"
+SSH_DIR="$HOME/.ssh"
+REMOVE_PROGRAMS=( 'gnome-software' 'simple-scan' 'gnome-help' 'gnome-boxes' 'totem' 'cheese' 'gnome-maps' 'gnome-photos' 'gnome-calculator' 'gnome-contacts' 'gnome-weather' 'gnome-clocks' 'rhythmbox' 'gnome-tour' 'gnome-calendar' )
+
+for program in "${REMOVE_PROGRAMS[@]}"
+do
+  sudo dnf remove "$program" -y
+done
+
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm --assumeyes
+
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+if ! [ -x "$(command -v ansible)" ]; then
+  sudo dnf install ansible --assumeyes
+fi
+
+if ! [[ -f "$SSH_DIR/id_rsa" ]]; then
+  mkdir -p "$SSH_DIR"
+
+  chmod 700 "$SSH_DIR"
+
+  ssh-keygen -b 4096 -t rsa -f "$SSH_DIR/id_rsa" -N "" -C "$USER@$HOSTNAME"
+
+  cat "$SSH_DIR/id_rsa.pub" >> "$SSH_DIR/authorized_keys"
+
+  chmod 600 "$SSH_DIR/authorized_keys"
+fi
+
+sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
+sudo dnf config-manager --add-repo https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
+sudo dnf copr enable varlad/helix --assumeyes
+
+sudo dnf update --assumeyes
+ansible-galaxy collection install community.general
+
+if [[ -f "$DOTFILES_DIR/main.yml" ]]; then
+  ansible-playbook --diff "$DOTFILES_DIR/main.yml" --ask-become-pass
+fi
+
+# run before script
+# mkdir -p $HOME/.dotfiles
+# mkdir .dotfiles/bin
+# touch .dotfiles/bin/dotfiles
+# chmod 755 .dotfiles/bin/dotfiles
+
+# run after
+# info on setting up qemu virtualization
+# run after script
+# sudo nvim /etc/libvirt/libvirtd.conf
+# - set the domain scoket group ownership to libvirt
+# unix_sock_group = "libvert"
+# - adjust the UNIX sock permsssions for the R/W socket
+# unix_sock_rw_perms = "0770"
+# - start and enable libvertd service
+# sudo systemctl start libvirtd
+# sudo systemctl enable libvirtd
+# - add user to group
+# sudo usermod -a -G libvirt $(whoami)
+#
+# curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+# source ~/.bashrc
+# nvm install lts/*
+#
+#

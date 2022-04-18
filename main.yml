@@ -1,0 +1,50 @@
+---
+- hosts: localhost
+  become: yes
+  vars:
+    - user: 'fedora_vm'
+    - dotfiles_repo: https://github.com/htder/dotfiles
+    - ssh_key: '.ssh/id_rsa'
+
+  tasks:
+    - name: "Install system packages"
+      dnf:
+        name:
+          - helix
+          - curl
+          - '@virtualization'
+          - '@C Development Tools and Libraries'
+          - sublime-text
+          - kitty
+          - chromium
+          - discord
+          - gnome-tweaks
+          - gnome-extensions-app
+          - neovim
+          - ripgrep
+          - fd-find
+          - git
+          - jetbrains-mono-fonts-all
+          - fira-code-fonts
+        state: latest
+
+    - name: "Install flatpak packages"
+      community.general.flatpak:
+        name:
+          - com.getpostman.Postman
+          - com.visualstudio.code
+          - com.vscodium.codium
+          - org.signal.Signal
+          - org.eclipse.Java
+          - com.jetbrains.IntelliJ-IDEA-Ultimate
+        state: present
+
+    - name: "Autoremove unneeded package installed as dependencies"
+      dnf:
+        autoremove: yes
+
+    - name: "nvm and sdkman install"
+      shell: 'curl -s https://get.sdkman.io | bash'
+    
+    - name: "test"
+      shell: 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash'
